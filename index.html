@@ -86,7 +86,7 @@ input[type=text],input[type=number],input[type=password],select{padding:8px 10px
 // ===== Config =====
 const SB_URL = "", SB_KEY = ""; // Supabase project URL + publishable key. Empty = local demo mode.
 let sb = null; try { if (SB_URL && SB_KEY && window.supabase) sb = supabase.createClient(SB_URL, SB_KEY); } catch (_) {}
-// Admin mobile numbers (254XXXXXXXXX). Must match is_admin() in supabase.sql.
+// Admin mobile numbers (254725646425). Must match is_admin() in supabase.sql.
 const ADMINS = [];
 const FREE = 1000, COD = 50; // free delivery from KSh 1,000; cash-on-delivery fee
 const $ = s => document.querySelector(s), R = n => "KSh " + Math.round(n).toLocaleString("en-KE");
