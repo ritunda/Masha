@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sokio: shop for less</title>
+<meta name="theme-color" content="#9b2c6f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f5f3;--sf:#fff;--tx:#211e20;--mu:#6f6a6d;--ln:#e4e1e2;--ac:#9b2c6f;--ac2:#f5e6ef;--ok:#2b7a4b;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141214;--sf:#1d1a1c;--tx:#ece8ea;--mu:#9a9498;--ln:#2d292b;--ac:#e07ab5;--ac2:#33202b;--ok:#6fcf97;--bad:#f2867f}}
+:root[data-theme="dark"]{--bg:#141214;--sf:#1d1a1c;--tx:#ece8ea;--mu:#9a9498;--ln:#2d292b;--ac:#e07ab5;--ac2:#33202b;--ok:#6fcf97;--bad:#f2867f}
+html{color-scheme:light dark;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:12px 14px 56px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.brand{font-size:19px;letter-spacing:-.02em;color:var(--ac)}
+button,select,input{font:inherit;color:var(--tx)}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden;background:var(--sf)}
+.seg button{border:0;background:none;padding:7px 11px;color:var(--mu)}
+.seg button[aria-pressed=true]{background:var(--ac);color:#fff}
+.tabs{display:flex;gap:16px;border-bottom:1px solid var(--ln);margin-bottom:14px}
+.tabs button{border:0;background:none;padding:8px 0;color:var(--mu);border-bottom:2px solid transparent}
+.tabs button[aria-current=true]{color:var(--tx);border-color:var(--ac)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+input[type=search],input[type=text],input[type=number],select{padding:8px 10px;border:1px solid var(--ln);border-radius:8px;background:var(--sf)}
+input[type=search]{flex:1 1 180px}
+.chip{border:1px solid var(--ln);background:var(--sf);color:var(--mu);padding:5px 11px;border-radius:99px;font-size:13px}
+.chip[aria-pressed=true]{background:var(--ac2);color:var(--ac);border-color:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:8px;text-align:left;display:block;width:100%}
+.tile{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;font-size:44px;margin-bottom:6px;color:#000}
+.big .tile{font-size:96px;max-width:320px}
+.t{font-size:14px;margin:0}.mu{color:var(--mu);font-size:13px}.p{font-weight:650}
+.ad{font-size:11px;border:1px solid var(--ln);border-radius:4px;padding:0 4px;color:var(--mu);margin-left:4px}
+.box{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:12px;margin-bottom:10px}
+.pri{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:9px 14px}
+.pri:disabled{opacity:.4;cursor:not-allowed}
+.sec{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:6px 10px;font-size:13px}
+.sec.d{color:var(--bad)}
+.kv{display:flex;justify-content:space-between;gap:10px}
+.step{display:flex;gap:3px;margin:8px 0}.step i{flex:1;height:4px;border-radius:2px;background:var(--ln)}.step i.on{background:var(--ac)}
+.st{font-weight:600;text-transform:capitalize}.st.rto,.st.returned{color:var(--bad)}.st.delivered{color:var(--ok)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.stats div{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px}.stats b{display:block;font-size:19px}
+h2{font-size:16px;margin:16px 0 8px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.wrap{overflow-x:auto}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--tx);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:14px;max-width:90vw}
+#splash{position:fixed;inset:0;z-index:99;background:#9b2c6f;display:grid;place-content:center;justify-items:center;gap:12px;transition:opacity .4s}
+#splash.out{opacity:0;pointer-events:none}
+#splash svg{width:120px;height:120px}
+.sp{fill:none;stroke:#fff;stroke-width:22;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1000;stroke-dashoffset:1000;animation:dr 1s ease forwards}
+.sp-w{color:#fff;font:700 36px system-ui,sans-serif;letter-spacing:-.03em;opacity:0;animation:fi .5s 1.3s forwards}
+@keyframes dr{to{stroke-dashoffset:0}}@keyframes fi{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sp{animation:none;stroke-dashoffset:0}.sp-w{animation:none;opacity:1}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.109.0/dist/umd/supabase.js"></script>
+</head>
+<body>
+<main id="app"></main>
+<div id="splash" aria-hidden="true"><svg viewBox="0 0 512 512"><rect class="sp" x="136" y="190" width="240" height="210" rx="36"/><path class="sp" style="animation-delay:.5s" d="M200 230V200a56 56 0 0 1 112 0V230"/><path class="sp" style="animation-delay:.9s" d="M205 310Q256 365 307 310"/></svg><div class="sp-w">sokio</div></div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+// ===== Supabase: paste your project URL and anon (public) key to go live. Leave empty for local demo mode. =====
+const SB_URL = "https://qzgkxxregkuiaprufysl.supabase.co", SB_KEY = "sb_publishable_yDqNvJAjr9THzxZ6J4s6Fg_LFt39FpS"; // publishable key: safe in the browser
+let sb = null; try { if (SB_URL && SB_KEY && window.supabase) sb = supabase.createClient(SB_URL, SB_KEY); } catch (_) {}
+// ===== Business constants =====
+const FREE = 1000;   // Rule: orders at/above this product total ship free to the buyer (seller bears the shipping cost)
+const COD = 50;     // Rule: flat fee charged to buyer on cash-on-delivery; platform revenue
+const SHIP_MARGIN = 0.3; // Rule: platform keeps 30% of each shipping fee as shipping margin
+const $ = s => document.querySelector(s), R = n => "KSh " + Math.round(n).toLocaleString("en-KE");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CATS = {"Women’s wear":"#f3d9e6","Men’s wear":"#d9e4f3","Home":"#e6efd9","Kitchen":"#f3e7d3"};
+const FLOW = ["placed","packed","picked_up","in_transit","out_for_delivery","delivered"];
+
+// ===== Seed data (title|category|emoji|basePrice|seller#|stock|rating|ratings|dailyAdBid) =====
+const D = `Kitenge dress|Women’s wear|🥻|299|1|40|4.2|310|12
+Kanga wrap|Women’s wear|👘|449|1|25|4.0|180|0
+Rayon palazzo|Women’s wear|👖|199|2|60|4.1|220|0
+Glass bangles set|Women’s wear|💍|99|2|90|3.9|75|0
+Head scarf|Women’s wear|🧣|149|1|50|4.3|140|8
+Round-neck tee|Men’s wear|👕|199|3|80|4.1|400|0
+Checked shirt|Men’s wear|👔|349|3|35|4.0|160|15
+Track pants|Men’s wear|🩳|299|3|45|4.2|230|0
+Cotton socks, 3 pack|Men’s wear|🧦|129|3|120|3.8|95|0
+Leather wallet|Men’s wear|👛|249|3|30|4.4|210|0
+Double bedsheet set|Home|🛏️|799|4|20|4.3|260|20
+Cushion covers|Home|🛋️|179|2|70|4.0|120|0
+Door mat|Home|🚪|129|4|55|3.9|88|0
+Wall clock|Home|🕒|349|4|28|4.2|140|0
+LED string lights|Home|💡|159|4|100|4.1|330|0
+Steel water bottle|Kitchen|🍶|249|4|65|4.5|520|10
+Non-stick pan|Kitchen|🍳|599|4|18|4.2|190|0
+Storage jars set|Kitchen|🫙|299|2|40|4.0|110|0
+Knife set|Kitchen|🔪|199|4|50|3.9|130|0
+Masala box|Kitchen|🥄|349|2|33|4.4|170|0`;
+const P = D.split("\n").map((l,i)=>{const [t,c,e,p,s,st,r,n,b]=l.split("|");
+  return {id:"p"+(i+1),title:t,category:c,image:e,sellerId:"s"+s,basePrice:+p,stock:+st,
+    sizes:c.includes("wear")?["S","M","L","XL"]:["Standard"],rating:+r,ratingCount:+n,
+    returnWindowDays:7,promoted:+b>0,promoBid:+b};});
+const SELLERS = [["s1","Gikomba Textiles","00100"],["s2","Mombasa Prints","80100"],["s3","Nakuru Basics","20100"],["s4","Eastleigh Homeware","00610"]]
+  .map(([id,name,pincode])=>({id,name,pincode,rating:4.2,rc:100,shippingMode:"platform_pickup",balance:0}));
+const RESELLERS = [{id:"r1",name:"Wanjiru (Nakuru)",earnings:0,links:[]},{id:"r2",name:"Otieno (Kisumu)",earnings:0,links:[]}];
+const BUYER = {pincode:"20100"};
+const S = {role:"buyer",view:"shop",sid:"s1",rid:"r1",cat:"All",q:"",max:800,r4:false,sort:"rel",pid:null,
+  cart:[],refs:{},margins:{},orders:[],rev:{ads:0,ship:0,cod:0},pin:BUYER.pincode,pay:"COD",nid:1001};
+const pr = id => P.find(p=>p.id===id), sl = id => SELLERS.find(s=>s.id===id), rs = id => RESELLERS.find(r=>r.id===id);
+const pend = o => !o.settled && !["rto","returned"].includes(o.status);
+let tt; const toast = m => {const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2200)};
+
+// ===== Rules =====
+// Postcode: valid 5 digits; starting with 9 is unserviceable (demo). ETA by zone = first digit mod 3.
+const svc = p => /^\d{5}$/.test(p) && p[0] !== "9";
+const eta = p => ["3–4","4–6","5–7"][p[0]%3] + " days";
+// Price: basePrice + reseller margin (only when the buyer arrived through that reseller’s link).
+const unit = p => p.basePrice + (S.refs[p.id] ? S.refs[p.id].margin : 0);
+// Orders are split per seller. Shipping tier: 49 up to 2 units, else 79. Free for buyer at FREE+.
+function mk(){const g={};S.cart.forEach(i=>{const s=pr(i.pid).sellerId;(g[s]=g[s]||[]).push(i)});
+  return Object.entries(g).map(([sellerId,items])=>{
+    const pt=items.reduce((a,i)=>a+(pr(i.pid).basePrice+i.margin)*i.qty,0),u=items.reduce((a,i)=>a+i.qty,0);
+    const ship=u>2?200:120,free=pt>=FREE,cod=S.pay==="COD"?COD:0;
+    return {sellerId,items,productTotal:pt,shippingFee:ship,free,codFee:cod,
+      resellerMargin:items.reduce((a,i)=>a+i.margin*i.qty,0),resellerId:(items.find(i=>i.rid)||{}).rid||null,
+      total:pt+(free?0:ship)+cod};});}
+// Seller commission 0%. Payout = base x qty, minus shipping only if the seller bears it (free delivery).
+const payout = o => o.items.reduce((a,i)=>a+pr(i.pid).basePrice*i.qty,0) - (o.free?o.shippingFee:0);
+// Settlement happens only after delivery AND the 7-day return window closes: seller paid, reseller credited, platform books fees.
+function settle(o){if(o.status!=="delivered"||o.settled)return;o.settled=true;sl(o.sellerId).balance+=payout(o);
+  if(o.resellerId)rs(o.resellerId).earnings+=o.resellerMargin;S.rev.ship+=o.shippingFee*SHIP_MARGIN;S.rev.cod+=o.codFee;}
+const restock = o => o.items.forEach(i=>pr(i.pid).stock+=i.qty);
+// Logistics sim: packed onward advances by button (seller packs first).
+function advance(o){const i=FLOW.indexOf(o.status);if(i>0&&i<5)o.status=FLOW[i+1];}
+// RTO: seller is billed the shipping fee, platform books its margin, stock returns.
+function rto(o){o.status="rto";sl(o.sellerId).balance-=o.shippingFee;S.rev.ship+=o.shippingFee*SHIP_MARGIN;restock(o);}
+// Return within window: no payout and no reseller credit (nothing was credited yet), stock returns.
+function ret(o){o.status="returned";restock(o);}
+function rate(o,v){o.rated=v;o.items.forEach(i=>{const p=pr(i.pid);p.rating=(p.rating*p.ratingCount+v)/(p.ratingCount+1);p.ratingCount++});
+  const s=sl(o.sellerId);s.rating=(s.rating*s.rc+v)/(s.rc+1);s.rc++;}
+// Ads: running an ad day bills each promoted product’s daily bid to its seller; platform ad revenue.
+function adDay(){P.filter(p=>p.promoted).forEach(p=>{sl(p.sellerId).balance-=p.promoBid;S.rev.ads+=p.promoBid});}
+
+// ===== Accounts (demo only: stored in this browser, not a real backend) =====
+const LS=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(_){return null}};
+let ACC=LS("bz_acc")||{};S.user=LS("bz_user");S.mode="in";if(!ACC[S.user])S.user=null;
+// Kenyan mobile: 07XX / 01XX / +2547XX / 2541XX, normalised to 254XXXXXXXXX.
+const nm=m=>{const x=/^(?:\+?254|0)([17]\d{8})$/.exec(String(m).replace(/[\s-]/g,""));return x?"254"+x[1]:null};
+// No verification: the mobile number is just a login id and the 6-digit PIN is the password. No SMS or email code is sent.
+async function loadOrders(){const r=await sb.from("orders").select("data").order("created_at");S.orders=(r.data||[]).map(x=>x.data);S.nid=Math.max(1001,...S.orders.map(o=>+o.id+1||0))}
+function sync(o){if(!sb||!S.uid||!o||o.buyerId!==S.user)return;o.saved=1;sb.from("orders").upsert({user_id:S.uid,order_no:o.id,data:o},{onConflict:"user_id,order_no"}).then(r=>{if(r.error)toast("Could not save order")})}
+async function doAuth(m,pn){const nw=S.mode==="new",n=nw?$("#an").value.trim():"";if(nw&&!n)return toast("Enter your name");
+  if(sb){const email=m+"@users.sokio.app",cr={email,password:pn},{data,error}=nw?await sb.auth.signUp({...cr,options:{data:{name:n}}}):await sb.auth.signInWithPassword(cr);
+    if(error)return toast(nw?error.message:"Mobile number or PIN is incorrect");if(!data.session)return toast("Turn off Confirm email in Supabase Auth settings");
+    ACC[m]={name:data.user.user_metadata.name||n};S.uid=data.user.id;await loadOrders()}
+  else{if(nw){if(ACC[m])return toast("Account exists. Sign in instead");ACC[m]={name:n,pin:pn};LS("bz_acc",ACC)}else if(!ACC[m]||ACC[m].pin!==pn)return toast("Mobile number or PIN is incorrect")}
+  S.user=m;LS("bz_user",m);S.view=S.back||"shop";S.back=null;toast("Welcome, "+ACC[m].name);render()}
+function acct(){if(S.user){const a=ACC[S.user];return `<div class="box"><b>${esc(a.name)}</b><div class="mu">+${S.user}</div></div><button class="sec" data-a="logout">Sign out</button>`}
+  const c=S.mode==="new";return `<div class="box"><div class="row"><button class="chip" aria-pressed="${!c}" data-a="mode" data-x="in">Sign in</button><button class="chip" aria-pressed="${c}" data-a="mode" data-x="new">Create account</button></div>
+  ${c?'<p><label>Name<br><input type="text" id="an" autocomplete="name"></label></p>':""}
+  <p><label>Mobile number<br><input type="text" id="am" inputmode="tel" placeholder="07XX XXX XXX" autocomplete="tel"></label></p>
+  <p><label>6-digit PIN<br><input type="password" id="ap" inputmode="numeric" maxlength="6" autocomplete="${c?"new-password":"current-password"}"></label></p>
+  <button class="pri" data-a="auth">${c?"Create account":"Sign in"}</button><p class="mu">No code or SMS needed. Choose a 6-digit PIN you will remember.</p></div>`}
+
+// ===== Views =====
+
+const stars = p => `★ ${p.rating.toFixed(1)} (${p.ratingCount})`;
+const tile = p => `<div class="tile" style="background:${CATS[p.category]}">${p.image}</div>`;
+function shop(){
+  let L=P.filter(p=>(S.cat==="All"||p.category===S.cat)&&unit(p)<=S.max&&(!S.r4||p.rating>=4)&&(p.title+p.category).toLowerCase().includes(S.q.toLowerCase()));
+  const f={rel:(a,b)=>(b.promoBid-a.promoBid)||(b.rating-a.rating),lo:(a,b)=>unit(a)-unit(b),hi:(a,b)=>unit(b)-unit(a),rt:(a,b)=>b.rating-a.rating}[S.sort];
+  L=[...L].sort(f);
+  return `<div class="row"><input type="search" id="q" placeholder="Search products" value="${esc(S.q)}" aria-label="Search"></div>
+  <div class="row">${["All",...Object.keys(CATS)].map(c=>`<button class="chip" aria-pressed="${S.cat===c}" data-a="cat" data-x="${c}">${c}</button>`).join("")}</div>
+  <div class="row"><label class="mu">Up to ${R(S.max)} <input type="range" min="100" max="800" step="50" value="${S.max}" data-c="max"></label>
+  <label class="mu"><input type="checkbox" data-c="r4" ${S.r4?"checked":""}> 4★ and up</label>
+  <select data-c="sort" aria-label="Sort"><option value="rel" ${S.sort==="rel"?"selected":""}>Promoted first</option><option value="lo" ${S.sort==="lo"?"selected":""}>Price: low to high</option><option value="hi" ${S.sort==="hi"?"selected":""}>Price: high to low</option><option value="rt" ${S.sort==="rt"?"selected":""}>Top rated</option></select></div>
+  <div class="grid">${L.map(p=>`<button class="card" data-a="open" data-x="${p.id}">${tile(p)}<p class="t">${esc(p.title)}${p.promoted?'<span class="ad">Ad</span>':""}</p><div class="p">${R(unit(p))}</div><div class="mu">${stars(p)}${p.stock<10?" · low stock":""}</div></button>`).join("")||'<p class="mu">No products match. Clear a filter.</p>'}</div>`;}
+function prod(){const p=pr(S.pid),r=S.refs[p.id];
+  return `<button class="sec" data-a="view" data-x="shop">Back</button><div class="box big" style="margin-top:10px">${tile(p)}<h2 style="margin-top:0">${esc(p.title)}</h2>
+  <div class="p" style="font-size:20px">${R(unit(p))}</div>${r?`<div class="mu">Includes ${R(r.margin)} reseller margin (link from ${rs(r.rid).name})</div>`:""}
+  <div class="mu">${stars(p)} · Sold by ${sl(p.sellerId).name} (★ ${sl(p.sellerId).rating.toFixed(1)}) · ${p.returnWindowDays}-day returns</div>
+  <div class="mu">${unit(p)>=FREE?"Free delivery":"Free delivery above "+R(FREE)} · ${p.stock} in stock</div>
+  <div class="row" style="margin-top:10px"><select id="size" aria-label="Size">${p.sizes.map(s=>`<option>${s}</option>`).join("")}</select>
+  <input type="number" id="qty" value="1" min="1" max="${p.stock}" style="width:70px" aria-label="Quantity">
+  <button class="pri" data-a="add" ${p.stock?"":"disabled"}>${p.stock?"Add to cart":"Out of stock"}</button></div></div>`;}
+function cart(){if(!S.cart.length)return '<p class="mu">Your cart is empty. Add something from Shop.</p>';
+  const o=mk();return S.cart.map((i,k)=>{const p=pr(i.pid);return `<div class="box kv"><span>${p.image} ${esc(p.title)} <span class="mu">${i.size} × ${i.qty}</span></span><span>${R((p.basePrice+i.margin)*i.qty)} <button class="sec d" data-a="rm" data-x="${k}" aria-label="Remove">Remove</button></span></div>`}).join("")
+  +`<div class="box">${o.map(x=>`<div class="kv"><span class="mu">From ${sl(x.sellerId).name}</span><span>${R(x.productTotal)} · ${x.free?"free delivery":"delivery "+R(x.shippingFee)}</span></div>`).join("")}</div><button class="pri" data-a="view" data-x="checkout">Checkout</button>`;}
+function checkout(){if(!S.cart.length)return cart();if(!S.user)return '<div class="box">Sign in with your mobile number to place your order.</div><button class="pri" data-a="login">Sign in or create account</button>';const o=mk(),ok=svc(S.pin),t=o.reduce((a,x)=>a+x.total,0);
+  return `<div class="box"><label>Delivery postcode <input type="text" inputmode="numeric" maxlength="5" value="${esc(S.pin)}" data-c="pin" style="width:110px"></label>
+  <div class="${ok?"ok":"bad"}">${ok?"Delivers in "+eta(S.pin):"Not serviceable. Enter a valid 5-digit postcode (not starting with 9)."}</div></div>
+  <div class="box"><label><input type="radio" name="pay" data-c="pay" value="COD" ${S.pay==="COD"?"checked":""}> Cash on delivery (+${R(COD)})</label><br>
+  <label><input type="radio" name="pay" data-c="pay" value="prepaid" ${S.pay==="prepaid"?"checked":""}> Prepaid (mock)</label></div>
+  <div class="box">${o.map(x=>`<div class="kv"><span class="mu">Order from ${sl(x.sellerId).name}</span><span>${R(x.total)}</span></div>`).join("")}<div class="kv p"><span>Total</span><span>${R(t)}</span></div></div>
+  <button class="pri" data-a="place" ${ok?"":"disabled"}>Place order</button>`;}
+function oc(o,m){const i=FLOW.indexOf(o.status),b=[];
+  if(m==="seller"&&o.status==="placed")b.push(["pack","Pack order"]);
+  if(m!=="seller"){if(o.status==="placed")b.push([null,"Waiting for seller to pack"]);
+    if(i>0&&i<5)b.push(["adv","Advance (demo)"]);if(i===4)b.push(["rto","Fail delivery (RTO)"]);
+    if(o.status==="delivered"&&!o.settled){if(m==="buyer")b.push(["ret","Return"]);b.push(["settle","Close return window"])}}
+  return `<div class="box"><div class="kv"><b>#${o.id}</b><span class="st ${o.status}">${o.status.replace(/_/g," ")}</span></div>
+  <div class="mu">${o.items.map(x=>`${pr(x.pid).title} ${x.size}×${x.qty}`).join(", ")}</div>
+  <div class="step">${FLOW.map((_,k)=>`<i class="${k<=i?"on":""}"></i>`).join("")}</div>
+  <div class="mu">${m==="seller"?`Your payout ${R(payout(o))}${o.free?" (after shipping)":""} · ${o.settled?"paid":"pays after return window"}`:`${o.paymentMode} · total ${R(o.total)}${o.resellerId?" · reseller margin "+R(o.resellerMargin):""}`}</div>
+  <div class="row" style="margin:8px 0 0">${b.map(([a,l])=>a?`<button class="sec ${a==="rto"?"d":""}" data-a="${a}" data-x="${o.id}">${l}</button>`:`<span class="mu">${l}</span>`).join("")}
+  ${m==="buyer"&&o.status==="delivered"&&!o.rated?`<select data-c="rate" data-x="${o.id}" aria-label="Rate"><option value="">Rate</option>${[5,4,3,2,1].map(n=>`<option>${n}</option>`).join("")}</select>`:""}${o.rated?`<span class="mu">You rated ${o.rated}★</span>`:""}</div></div>`;}
+function orders(){if(!S.user)return '<p class="mu">Sign in to see your orders.</p><button class="pri" data-a="login">Sign in</button>';const m=S.orders.filter(o=>o.buyerId===S.user);return m.length?[...m].reverse().map(o=>oc(o,"buyer")).join(""):'<p class="mu">No orders yet.</p>';}
+function seller(){const s=sl(S.sid),os=S.orders.filter(o=>o.sellerId===s.id),mine=P.filter(p=>p.sellerId===s.id);
+  return `<div class="row"><select data-c="sid" aria-label="Seller">${SELLERS.map(x=>`<option value="${x.id}" ${x.id===s.id?"selected":""}>${x.name}</option>`).join("")}</select><span class="mu">0% commission · postcode ${s.pincode}</span></div>
+  <div class="stats"><div><span class="mu">Payout balance</span><b>${R(s.balance)}</b></div><div><span class="mu">Orders</span><b>${os.length}</b></div><div><span class="mu">Rating</span><b>★ ${s.rating.toFixed(1)}</b></div></div>
+  <h2>Products</h2><div class="wrap">${mine.map(p=>`<div class="box kv"><span>${p.image} ${esc(p.title)}<br><span class="mu">${R(p.basePrice)}</span></span>
+  <span class="mu">Stock <input type="number" min="0" value="${p.stock}" data-c="stock" data-x="${p.id}" style="width:64px" aria-label="Stock"> Daily ad bid KSh <input type="number" min="0" value="${p.promoBid}" data-c="bid" data-x="${p.id}" style="width:64px" aria-label="Ad bid"></span></div>`).join("")}</div>
+  <h2>Add product</h2><div class="box row"><input type="text" id="nt" placeholder="Title" aria-label="Title"><select id="nc" aria-label="Category">${Object.keys(CATS).map(c=>`<option>${c}</option>`).join("")}</select>
+  <input type="number" id="np" placeholder="Price" min="1" style="width:80px" aria-label="Price"><input type="number" id="ns" placeholder="Stock" min="1" style="width:80px" aria-label="Stock"><input type="text" id="ne" placeholder="Emoji" maxlength="2" style="width:60px" aria-label="Emoji"><button class="pri" data-a="addp">Add</button></div>
+  <h2>Orders</h2>${os.length?[...os].reverse().map(o=>oc(o,"seller")).join(""):'<p class="mu">No orders yet.</p>'}`;}
+function reseller(){const r=rs(S.rid),os=S.orders.filter(o=>o.resellerId===r.id&&pend(o)),pe=os.reduce((a,o)=>a+o.resellerMargin,0);
+  return `<div class="row"><select data-c="rid" aria-label="Reseller">${RESELLERS.map(x=>`<option value="${x.id}" ${x.id===r.id?"selected":""}>${x.name}</option>`).join("")}</select></div>
+  <div class="stats"><div><span class="mu">Earned</span><b>${R(r.earnings)}</b></div><div><span class="mu">Pending</span><b>${R(pe)}</b></div><div><span class="mu">Links shared</span><b>${r.links.length}</b></div></div>
+  <p class="mu">Margin is credited only after delivery and the return window.</p>
+  ${P.map(p=>`<div class="box"><div class="kv"><span>${p.image} ${esc(p.title)}</span><span class="p">${R(p.basePrice+(S.margins[p.id]??30))}</span></div>
+  <div class="row" style="margin:8px 0 0"><label class="mu">Margin KSh <input type="number" min="0" max="500" value="${S.margins[p.id]??30}" data-c="margin" data-x="${p.id}" style="width:70px"></label>
+  <button class="sec" data-a="copy" data-x="${p.id}">Copy link</button><button class="sec" data-a="prev" data-x="${p.id}">Preview as buyer</button></div></div>`).join("")}`;}
+function admin(){const t=S.rev.ads+S.rev.ship+S.rev.cod,g=S.orders.filter(o=>!["rto","returned"].includes(o.status)).reduce((a,o)=>a+o.productTotal,0);
+  return `<div class="stats"><div><span class="mu">Orders</span><b>${S.orders.length}</b></div><div><span class="mu">GMV</span><b>${R(g)}</b></div><div><span class="mu">Platform revenue</span><b>${R(t)}</b></div></div>
+  <div class="box"><div class="kv"><span>Ads</span><span>${R(S.rev.ads)}</span></div><div class="kv"><span>Shipping margin</span><span>${R(S.rev.ship)}</span></div><div class="kv"><span>COD fees</span><span>${R(S.rev.cod)}</span></div></div>
+  <button class="sec" data-a="ad">Run one ad day</button><span class="mu"> Bills each promoted product’s bid to its seller.</span>
+  <h2>Orders</h2>${S.orders.length?[...S.orders].reverse().map(o=>oc(o,"admin")).join(""):'<p class="mu">No orders yet.</p>'}`;}
+
+function render(){const r=S.role;let h=`<header><b class="brand">sokio</b><div class="seg" role="group" aria-label="Role">${["buyer","seller","reseller",...(S.adm?["admin"]:[])].map(x=>`<button aria-pressed="${r===x}" data-a="role" data-x="${x}">${x[0].toUpperCase()+x.slice(1)}</button>`).join("")}</div></header>`;
+  if(r==="buyer"){const t=[["shop","Shop"],["cart","Cart"+(S.cart.length?` (${S.cart.length})`:"")],["orders","Orders"+(S.orders.length?` (${S.orders.length})`:"")]];
+    h+=`<nav class="tabs">${[...t,["account",S.user?"Account":"Sign in"]].map(([v,l])=>`<button data-a="view" data-x="${v}" ${S.view===v||(v==="shop"&&S.view==="product")||(v==="cart"&&S.view==="checkout")?'aria-current="true"':""}>${l}</button>`).join("")}</nav>`+({shop,prod,cart,checkout,orders,account:acct}[S.view]||shop)();}
+  else h+={seller,reseller,admin}[r]();
+  $("#app").innerHTML=h;}
+
+// ===== Events =====
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,x=b.dataset.x,o=S.orders.find(q=>q.id===x);
+  if(a==="role"){S.role=x;S.view="shop"}
+  else if(a==="view")S.view=x;
+  else if(a==="cat")S.cat=x;
+  else if(a==="open"){S.pid=x;S.view="prod"}
+  else if(a==="add"){const p=pr(S.pid),q=Math.max(1,Math.min(p.stock,+$("#qty").value||1)),sz=$("#size").value,rf=S.refs[p.id]||{margin:0,rid:null};
+    const ex=S.cart.find(i=>i.pid===p.id&&i.size===sz&&i.margin===rf.margin);ex?ex.qty=Math.min(p.stock,ex.qty+q):S.cart.push({pid:p.id,size:sz,qty:q,rid:rf.rid,margin:rf.margin});toast("Added to cart");}
+  else if(a==="rm")S.cart.splice(+x,1);
+  else if(a==="place"){if(!S.user)return toast("Sign in first");mk().forEach(d=>{S.orders.push({id:String(S.nid++),buyerId:S.user,...d,paymentMode:S.pay,status:"placed",createdAt:"Day 0",settled:false,rated:0});d.items.forEach(i=>pr(i.pid).stock-=i.qty)});S.cart=[];S.view="orders";toast("Order placed")}
+  else if(a==="mode")S.mode=x;
+  else if(a==="login"){S.back="checkout";S.mode="new";S.view="account"}
+  else if(a==="logout"){S.user=null;LS("bz_user",null);if(sb){sb.auth.signOut();S.orders=[];S.uid=null}toast("Signed out")}
+  else if(a==="auth"){const m=nm($("#am").value),pn=$("#ap").value;if(!m)return toast("Enter a valid Kenyan mobile number");if(!/^\d{6}$/.test(pn))return toast("PIN must be 6 digits");return doAuth(m,pn)}
+  else if(a==="pack")o.status="packed";
+  else if(a==="adv")advance(o);
+  else if(a==="rto")rto(o);
+  else if(a==="ret"){ret(o);toast("Return requested: no payout, stock restored")}
+  else if(a==="settle"){settle(o);toast("Return window closed: payouts credited")}
+  else if(a==="ad"){adDay();toast("Ad day billed")}
+  else if(a==="copy"){const m=S.margins[x]??30,u=location.href.split("#")[0]+`#ref-${S.rid}-${x}-${m}`,r=rs(S.rid);r.links.push(u);
+    try{navigator.clipboard.writeText(u).then(()=>toast("Link copied"),()=>toast("Link created (copy blocked)"))}catch(_){toast("Link created (copy blocked)")}}
+  else if(a==="prev"){S.refs[x]={rid:S.rid,margin:S.margins[x]??30};S.role="buyer";S.pid=x;S.view="prod"}
+  else if(a==="addp"){const t=$("#nt").value.trim(),p=+$("#np").value,s=+$("#ns").value;if(!t||!(p>0)||!(s>0))return toast("Add a title, price and stock");
+    const c=$("#nc").value;P.push({id:"p"+(P.length+1),title:t,category:c,image:$("#ne").value||"📦",sellerId:S.sid,basePrice:p,stock:s,sizes:c.includes("wear")?["S","M","L","XL"]:["Standard"],rating:0,ratingCount:0,returnWindowDays:7,promoted:false,promoBid:0});toast("Product listed")}
+  if(o)sync(o);if(a==="place")S.orders.filter(q=>!q.saved).forEach(sync);
+  render();});
+document.addEventListener("change",e=>{const t=e.target,c=t.dataset.c;if(!c)return;const x=t.dataset.x,v=t.value;
+  if(c==="max")S.max=+v;else if(c==="r4")S.r4=t.checked;else if(c==="sort")S.sort=v;else if(c==="pin")S.pin=v.trim();
+  else if(c==="pay")S.pay=v;else if(c==="sid")S.sid=v;else if(c==="rid")S.rid=v;
+  else if(c==="stock")pr(x).stock=Math.max(0,+v||0);
+  else if(c==="bid"){const p=pr(x);p.promoBid=Math.max(0,+v||0);p.promoted=p.promoBid>0}
+  else if(c==="margin")S.margins[x]=Math.max(0,+v||0);
+  else if(c==="rate"&&v){const q=S.orders.find(o=>o.id===x);rate(q,+v);sync(q)}
+  render();});
+document.addEventListener("input",e=>{if(e.target.id!=="q")return;S.q=e.target.value;render();const q=$("#q");q.focus();q.setSelectionRange(q.value.length,q.value.length)});
+// Reseller links use a plain hash, e.g. #ref-r1-p3-40, and open that product with the margin applied.
+function hash(){if(location.hash==="#admin"){S.adm=true;S.role="admin";render();return}const m=/^#ref-(r\d)-(p\d+)-(\d+)$/.exec(location.hash);if(m&&rs(m[1])&&pr(m[2])){S.refs[m[2]]={rid:m[1],margin:+m[3]};S.role="buyer";S.pid=m[2];S.view="prod";render()}}
+addEventListener("hashchange",hash);render();hash();
+if(sb)sb.auth.getSession().then(async({data})=>{const u=data.session&&data.session.user;if(!u)return;const m=u.email.split("@")[0];ACC[m]={name:u.user_metadata.name||"You"};S.user=m;S.uid=u.id;await loadOrders();render()});
+// Launch screen: SVG bag draws itself, then fades out.
+setTimeout(()=>{const s=$("#splash");s.classList.add("out");setTimeout(()=>s.remove(),500)},matchMedia("(prefers-reduced-motion:reduce)").matches?300:2300);
+if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
